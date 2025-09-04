@@ -10,30 +10,33 @@ export type ApiResponse<T> = {
 };
 
 export async function fetchUnits(
-  status?: string,
-  type?: string
+    status?: string,
+    type?: string,
+    limit?: number
 ): Promise<Unit[]> {
-  const params = new URLSearchParams();
+    const params = new URLSearchParams();
 
-  if (status) params.append("status", status);
-  if (type) params.append("type", type);
+    if (status) params.append("status", status);
+    if (type) params.append("type", type);
+    if (limit) params.append("limit", limit.toString());
+    if (!limit) params.set("limit", "100");
+    
+    const res = await fetch(
+        `${API_URL}/units${params.toString() ? `?${params.toString()}` : ""}`,
+        { cache: "no-store" }
+    );
 
-  const res = await fetch(
-    `${API_URL}/units${params.toString() ? `?${params.toString()}` : ""}`,
-    { cache: "no-store" }
-  );
+    if (!res.ok) throw new Error("Failed to fetch units");
+    const json = await res.json();
 
-  if (!res.ok) throw new Error("Failed to fetch units");
-  const json = await res.json();
-
-  // Ambil dari data.records dan map ke tipe Unit
-  return (json.data.records || []).map((u: any) => ({
-    id: u.ID,
-    name: u.name,
-    type: u.type,
-    status: u.status,
-    lastUpdated: u.lastUpdated,
-  }));
+    // Ambil dari data.records dan map ke tipe Unit
+    return (json.data.records || []).map((u: any) => ({
+        id: u.ID,
+        name: u.name,
+        type: u.type,
+        status: u.status,
+        lastUpdated: u.lastUpdated,
+    }));
 }
 
 
